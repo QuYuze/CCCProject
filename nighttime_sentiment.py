@@ -1,19 +1,13 @@
 
 import pandas as pd
 import sys
-import nltk
 import re
 import operator
-#import stylecloud
-#import spacy
 from sub_classification import *
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
-from nltk.corpus import wordnet
-from datetime import datetime
 
 
 

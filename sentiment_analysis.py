@@ -1,10 +1,8 @@
 import pandas as pd
 import sys
 import json
-import nltk
 import re
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import wordnet
@@ -12,7 +10,7 @@ from nltk.corpus import wordnet
 
 
 # load data
-data = pd.read_csv("offensive_tweet_collection.csv")
+data = pd.read_csv("output_tweet_with_time.csv")
 all_df = pd.DataFrame(data)
 all_df.reset_index(drop=True, inplace=False)
 print("the start data length: " , len(all_df))
@@ -28,7 +26,6 @@ print("the english data length: " , len(df))
 
 
 
-ps = PorterStemmer()
 lemmatizer = WordNetLemmatizer()
 
 
