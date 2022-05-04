@@ -150,8 +150,8 @@ def group_by_sub(input_df):
             mydic[sub]["pos"] = 0
         if "neg" not in mydic[sub].keys():
             mydic[sub]["neg"] = 0
-        score = (mydic[sub]["pos"] + 1)/(mydic[sub]["neg"] + 1)
-        log_score = math.log(score)
+        score = round((mydic[sub]["pos"] + 1)/(mydic[sub]["neg"] + 1), 4)
+        log_score = round(math.log(score), 4)
         scores.append(score)
         log_scores.append(log_score)
     new_df = pd.DataFrame(mydic.items(), columns=['Suburbs', 'Sentiment'])
