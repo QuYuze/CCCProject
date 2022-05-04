@@ -1,3 +1,4 @@
+import math
 
 import pandas as pd
 import sys
@@ -142,8 +143,22 @@ def group_by_sub(input_df):
                 mydic[sub]["neu"] = 1
             else: 
                 mydic[sub]["neg"] = 1
+    scores = []
+    log_scores = []
+    for sub in mydic.keys():
+        if "pos" not in mydic[sub].keys():
+            mydic[sub]["pos"] = 0
+        if "neg" not in mydic[sub].keys():
+            mydic[sub]["neg"] = 0
+        score = (mydic[sub]["pos"] + 1)/(mydic[sub]["neg"] + 1)
+        log_score = math.log(score)
+        scores.append(score)
+        log_scores.append(log_score)
     new_df = pd.DataFrame(mydic.items(), columns=['Suburbs', 'Sentiment'])
+    new_df["scores"] = scores
+    new_df["log_scores"] = log_scores
     return new_df
+
 df_suburb_sentiment = group_by_sub(df)
 df_suburb_sentiment.to_csv("./outputData/nighttime_suburb_groupping.csv", index= False)
 
