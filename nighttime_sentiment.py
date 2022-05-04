@@ -170,9 +170,9 @@ def tweet_classification(input_df):
     positive = input_df[input_df["compound"] > 0]
     negative = input_df[input_df["compound"] < 0]
     new_df = pd.DataFrame()
-    new_df["pos"] = len(positive)
-    new_df["neg"] = len(negative)
-    new_df["total"] = len(positive) + len(negative)
+    new_df["pos"] = [len(positive)]
+    new_df["neg"] = [len(negative)]
+    new_df["total"] = [len(positive) + len(negative)]
     new_df.to_csv("./outputData/nighttime_tweet_count.csv", index =False)
     return positive, negative
 
