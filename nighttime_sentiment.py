@@ -169,6 +169,11 @@ df_suburb_sentiment.to_csv("./outputData/nighttime_suburb_groupping.csv", index=
 def tweet_classification(input_df):
     positive = input_df[input_df["compound"] > 0]
     negative = input_df[input_df["compound"] < 0]
+    new_df = pd.DataFrame()
+    new_df["pos"] = len(positive)
+    new_df["neg"] = len(negative)
+    new_df["total"] = len(positive) + len(negative)
+    new_df.to_csv("./outputData/nighttime_tweet_count.csv", index =False)
     return positive, negative
 
 def word_count(input_df):
@@ -190,9 +195,17 @@ def word_count(input_df):
     return dict(sorted(output_dic.items(), key=operator.itemgetter(1), reverse=True))
 
 pos, neg = tweet_classification(df_sentiment)
-print(list(word_count(df_sentiment).items())[:50])
+total_50 = list(word_count(df_sentiment).items())[:50]
+print(total_50)
 print("*******pos: ********\n")
-print(list(word_count(pos).items())[:50])
+pos_50 = list(word_count(pos).items())[:50]
+print(pos_50)
 
 print("*******neg: ********\n")
-print(list(word_count(neg).items())[:50])
+neg_50 = list(word_count(neg).items())[:50]
+print(neg_50)
+nightword_count_df = pd.DataFrame()
+nightword_count_df["total"] = total_50
+nightword_count_df["pos"] = pos_50
+nightword_count_df["neg"] = neg_50
+nightword_count_df.to_csv("./outputData/nighttime_word_freq.csv", index = False)
