@@ -7,7 +7,6 @@ import pandas as pd
 from sub_classification import *
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
 
@@ -79,34 +78,41 @@ def create_offensive_list(offensive_df):
 
 def contain_offensive(text, offensive_df):
     keyword = {}
+    offensive_words = []
+    offensive_freq = []
     offensive_word_list = create_offensive_list(offensive_df)
     for offensive_word in offensive_word_list:
         if offensive_word in text:
-            if offensive_word in keyword.keys():
-                keyword[offensive_word] += 1
-            else:
-                keyword[offensive_word] = 1
+            freq = text.count(offensive_word)
+            offensive_words.append(offensive_word)
+            offensive_freq.append(freq)
+
+    for i in range(len(offensive_words)):
+        freq = offensive_freq[i]
+        offensive_word = offensive_words[i]
+        keyword[offensive_word] = freq
+
     if len(keyword.keys()) > 0:
         return True, keyword
     else:
         return False, keyword
 
-def preprocess_text(text, lemmatizer, stopwards, apply_stopword):
+def preprocess_text(text, stopwards, apply_stopword):
     free_url = re.sub(r'http\S+', '', text)
     plain_text = ''.join(item for item in free_url if (item.isalnum() or item == " "))
     
     words = word_tokenize(plain_text)
     output_list = []
     for w in words:
-        lemmed_word = lemmatizer.lemmatize(w)
+        lemmed_word = w
         if apply_stopword and (lemmed_word not in stopwards):
             output_list.append(lemmed_word)
         else:
             output_list.append(lemmed_word)
     return output_list, plain_text
 
-def update_offensive(json_dict, offensive_df, stopwords, lemmatizer):
-    wordlist, plaintext = preprocess_text(json_dict["text"], lemmatizer, stopwords, False)
+def update_offensive(json_dict, offensive_df, stopwords):
+    wordlist, plaintext = preprocess_text(json_dict["text"], stopwords, False)
     has_offensive, keywords = contain_offensive(plaintext, offensive_df)
     json_dict["has_offensive"] = has_offensive
     if has_offensive:
@@ -117,21 +123,74 @@ def update_offensive(json_dict, offensive_df, stopwords, lemmatizer):
 
 
 # find the sentiment
-def sentiment_analysis(json_dict, stopwords, lemmatizer):
+def sentiment_analysis(json_dict, stopwords):
     sid = SentimentIntensityAnalyzer()
-    wordlist, plaintext = preprocess_text(json_dict["text"], lemmatizer, stopwords, True)
+    wordlist, plaintext = preprocess_text(json_dict["text"], stopwords, True)
     json_dict["word_dict"] = wordlist
     sentiment_dict = sid.polarity_scores(plaintext)
     json_dict["sentiment_dict"] = sentiment_dict
     return json_dict
 
 #print(sentiment_analysis(json_dict, stopwords, lemmatizer)["sentiment_dict"])   
+def create_food_dic(food_df):
+    food_dic = {}
+    country_names = list(food_df.columns.values)
+    for country in country_names:
+        temp_food_list = []
+        for cuisine in food_df[country]:
+            temp_food_list.append(cuisine)
+        food_dic[country] = list(set(temp_food_list))
+    return food_dic
+
+def contain_food(plaintext, food_df):
+    keyword = {}
+
+    all_cusine = []
+    all_country = []
+    all_freq = []
+
+    food_dict= create_food_dic(food_df)
+    for country in food_dict.keys():
+        for cuisine in food_dict[country]:
+            if cuisine in plaintext:
+                freq = plaintext.count(cuisine)
+                all_freq.append(freq)
+                all_cusine.append(cuisine)
+                all_country.append(country)
+
+    for i in range(len(all_country)):
+        country = all_country[i]
+        cuisine = all_cusine[i]
+        freq = all_freq[i]
+        if country in keyword.keys():
+            keyword[country][cuisine] = freq
+        else:
+            keyword[country] = {}
+            keyword[country][cuisine] = freq    
+
+    if len(keyword.keys()) > 0:
+        return True, keyword
+    else:
+        return False, keyword
+
+
+def update_food(json_dict, food_df, stopwords):
+    wordlist, plaintext = preprocess_text(json_dict["text"],  stopwords, False)
+    has_food, keywords = contain_food(plaintext, food_df)
+    json_dict["has_food"] = has_food
+    if has_food:
+        json_dict["food_dic"] = keywords
+    else:
+        json_dict["food_dic"] = None
+    return json_dict
 
 def update_nonEng_tweet(json_dict):
     #json_dict["hour"] = hour
     #json_dict["suburb"]
     json_dict["has_offensive"] = None
     json_dict["offensive_dic"] = None
+    json_dict["has_food"] = None
+    json_dict["food_dic"] = None
     json_dict["word_dict"] = None
     json_dict["sentiment_dict"] = None
     return json_dict
@@ -147,16 +206,19 @@ def update(json_dict):
     total_offensive = pd.DataFrame(offensive_data)
     offensive_df = total_offensive[["American English", "Class"]]
 
-    # word analysis
-    lemmatizer = WordNetLemmatizer()
+    #load food dic data
+    food_data = pd.read_csv("food_key_words.csv")
+    total_food = pd.DataFrame(food_data)
+    food_df = total_food.drop(["Chinese", "Unnamed: 0"], axis= 1)
     
 
     json_dict = format_timestamp(json_dict)
 
     json_dict = update_suburb(json_dict, suburb_dict)
     if is_en_tweet(json_dict):
-        json_dict = update_offensive(json_dict, offensive_df, stopwords, lemmatizer)
-        json_dict = sentiment_analysis(json_dict, stopwords, lemmatizer)
+        json_dict = update_offensive(json_dict, offensive_df, stopwords)
+        json_dict = update_food(json_dict, food_df, stopwords)
+        json_dict = sentiment_analysis(json_dict, stopwords)
     else:
         json_dict = update_nonEng_tweet(json_dict)
 
@@ -165,6 +227,8 @@ def update(json_dict):
 # read a single tweet
 json_dict = read_sub(filename)
 print(update(json_dict))
+
+
 
 # read tweets within a list
 path = "./real_data/"
@@ -177,4 +241,4 @@ for file in files:
     new_dict = update(json_dict)
     print(new_dict)
    
-        
+     
