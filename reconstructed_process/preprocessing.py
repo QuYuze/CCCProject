@@ -1,3 +1,7 @@
+## Author: Juan Dai
+## Student ID: 1025253
+## Purpose: Proprocessing twitter to add more fields for later analysis
+
 import os, sys
 import json
 from dateutil import parser, tz

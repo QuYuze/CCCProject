@@ -1,3 +1,11 @@
+## Author: Juan Dai
+## Student ID: 1025253
+## Purpose: 
+## 1. Do sentiment analysis for twitter data, group the useful
+## words for each suburbs and their frequency
+## 2. Do offensive language searching and group them by suburb and hours
+## output the offensive words and frequecy
+
 import pandas as pd
 import math
 import operator

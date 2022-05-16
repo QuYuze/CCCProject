@@ -1,3 +1,7 @@
+## Author: Wentao Guo
+## Student ID: 1256470
+## Purpose: Identify suburb for each titter input
+
 # This is a sample Python script.
 from shapely.geometry import multipolygon,point,polygon
 import json
