@@ -1,3 +1,8 @@
+## Author: Juan Dai
+## Student ID: 1025253
+## purpose: preprocess twitter input and add necessary fields 
+## into the original twitter for later analysis section
+
 import os, sys
 import json
 from dateutil import parser, tz
@@ -73,6 +78,8 @@ def create_offensive_list(offensive_df):
         words = item.split("/")
         for word in words:
             s = re.sub(u"\\(adj\\)|\\(v\\)", "", word)
+            s = s.strip()
+            s = " " + s + " "
             offensive_words.append(s)
     return list(set(offensive_words))
 
@@ -81,9 +88,11 @@ def contain_offensive(text, offensive_df):
     offensive_words = []
     offensive_freq = []
     offensive_word_list = create_offensive_list(offensive_df)
+    
     for offensive_word in offensive_word_list:
-        if offensive_word in text:
-            freq = text.count(offensive_word)
+        text_ngrams = find_ngram(text, len(offensive_word))
+        if offensive_word in text_ngrams:
+            freq = text_ngrams.count(offensive_word)
             offensive_words.append(offensive_word)
             offensive_freq.append(freq)
 
@@ -99,8 +108,9 @@ def contain_offensive(text, offensive_df):
 
 def preprocess_text(text, stopwards, apply_stopword):
     free_url = re.sub(r'http\S+', '', text)
+    free_url = free_url.replace(",", " ")
     plain_text = ''.join(item for item in free_url if (item.isalnum() or item == " "))
-    
+    plain_text = " " +plain_text + " "
     words = word_tokenize(plain_text)
     output_list = []
     for w in words:
@@ -119,6 +129,7 @@ def update_offensive(json_dict, offensive_df, stopwords):
         json_dict["offensive_dic"] = keywords
     else:
         json_dict["offensive_dic"] = None
+    json_dict = format_off_dic(json_dict)
     return json_dict
 
 
@@ -138,6 +149,7 @@ def create_food_dic(food_df):
     for country in country_names:
         temp_food_list = []
         for cuisine in food_df[country]:
+            cuisine = " " + cuisine + " "
             temp_food_list.append(cuisine)
         food_dic[country] = list(set(temp_food_list))
     return food_dic
@@ -152,8 +164,9 @@ def contain_food(plaintext, food_df):
     food_dict= create_food_dic(food_df)
     for country in food_dict.keys():
         for cuisine in food_dict[country]:
-            if cuisine in plaintext:
-                freq = plaintext.count(cuisine)
+            text_ngrams = find_ngram(plaintext, len(cuisine))
+            if cuisine in text_ngrams:
+                freq = text_ngrams.count(cuisine)
                 all_freq.append(freq)
                 all_cusine.append(cuisine)
                 all_country.append(country)
@@ -182,7 +195,38 @@ def update_food(json_dict, food_df, stopwords):
         json_dict["food_dic"] = keywords
     else:
         json_dict["food_dic"] = None
+    json_dict = format_food_dic(json_dict)
     return json_dict
+def find_ngram(text, n):
+    ngrams = []
+    length = len(text)
+    if length >= n:
+        for i in range(length - n + 1):
+            temp_ngram = "".join(text[i : i+n])
+            ngrams.append(temp_ngram)
+    return ngrams
+    
+
+def format_food_dic(json_dict):
+    food_dic = json_dict["food_dic"]
+    if food_dic != None:
+        for country in food_dic.keys():
+            new_dic = {}
+            for cuisine in food_dic[country].keys():
+                new_dic[cuisine.strip()] = food_dic[country][cuisine]
+            food_dic[country] = new_dic
+        json_dict["food_dic"] = food_dic
+    return json_dict
+
+def format_off_dic(json_dict):
+    off_dic = json_dict["offensive_dic"]
+    if off_dic != None:
+        new_dic = {}
+        for offensive_word in off_dic.keys():
+            new_dic[offensive_word.strip()] = off_dic[offensive_word]
+        json_dict["offensive_dic"] = new_dic
+    return json_dict
+        
 
 def update_nonEng_tweet(json_dict):
     #json_dict["hour"] = hour
@@ -229,7 +273,7 @@ json_dict = read_sub(filename)
 print(update(json_dict))
 
 
-
+"""
 # read tweets within a list
 path = "./real_data/"
 files = os.listdir(path)
@@ -241,4 +285,4 @@ for file in files:
     new_dict = update(json_dict)
     print(new_dict)
    
-     
+"""   

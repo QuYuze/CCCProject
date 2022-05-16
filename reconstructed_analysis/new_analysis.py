@@ -1,3 +1,11 @@
+## Author: Juan Dai
+## Student ID: 1025253
+## Purpose: 1. Analyse the twitter data for nighttime sentiment, and 
+## collect useful words for each tweet, then do the word frequency 
+## 2. Analyse the twitter data for offensive language and count the frequent 
+## used offensive word, and group them by hour and suburb
+
+
 import pandas as pd
 import math
 import operator
